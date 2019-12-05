@@ -7,7 +7,7 @@ Supplies a polling interface as well as an event interface. Sometimes, its easie
 
 PeripheralInput needs to be updated in your animation loop (after you check inputs):
 
-`
+```
 function myAnimationLoop() {
     if (PeripheralInput.isKeyDown(PeripheralInput.keyCodes.space)) {
         // do something
@@ -15,4 +15,4 @@ function myAnimationLoop() {
 
     PeripheralInput.updatePeripheralInput()
 }
-`
+```
