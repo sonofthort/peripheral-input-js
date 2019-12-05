@@ -1,5 +1,4 @@
 PeripheralInput = {}
-PeripheralInput.detail = {}
 
 PeripheralInput.keyCodes = {
 	backspace: 8,
@@ -103,48 +102,101 @@ PeripheralInput.keyCodes = {
 	single_quote: 222
 }
 
-PeripheralInput.detail.keyDownMap = []
-PeripheralInput.detail.keyPressedMap = []
-PeripheralInput.detail.keyReleasedMap = []
-PeripheralInput.detail.keyPressedQueue = []
-PeripheralInput.detail.keyReleasedQueue = []
-
-PeripheralInput.isKeyDown = function(key) {
-	return PeripheralInput.detail.keyDownMap[key]
-}
-
-PeripheralInput.isKeyPressed = function(key) {
-	return PeripheralInput.detail.keyPressedMap[key]
-}
-
-PeripheralInput.isKeyReleased = function(key) {
-	return PeripheralInput.detail.keyReleasedMap[key]
-}
-
-window.addEventListener('keydown', function(event) {
-	var key = event.keyCode
-	event.preventDefault()
-	if (!PeripheralInput.detail.keyDownMap[key]) {
-		PeripheralInput.detail.keyPressedMap[key] = true
-		PeripheralInput.detail.keyDownMap[key] = true
-		PeripheralInput.detail.keyPressedQueue.push(key)
+PeripheralInput.PeripheralInputHandler = function(args) {
+	args = args || {}
+	this.element = args.element || window
+	this.keyDownMap = []
+	this.keyPressedMap = []
+	this.keyReleasedMap = []
+	this.keyPressedQueue = []
+	this.keyReleasedQueue = []
+	this.pointerX = 0
+	this.pointerY = 0
+	this.pointerDown = false
+	this.pointerPressed = false
+	this.pointerReleased = false
+	
+	var handler = this,
+		pointer = args.pointer == null ? true : args.pointer,
+		keyboard = args.keyboard == null ? true : args.keyboard
+	
+	if (pointer) {
+		this.element.addEventListener('pointerdown', function(event) {
+			handler.pointerX = event.offsetX
+			handler.pointerX = event.offsetY
+			if (!handler.pointerDown) {
+				handler.pointerDown = true
+				handler.pointerPressed = true
+			}
+		}, false)
+		
+		this.element.addEventListener('pointerup', function(event) {
+			handler.pointerX = event.offsetX
+			handler.pointerX = event.offsetY
+			handler.pointerDown = false
+			handler.pointerReleased = true
+		}, false)
 	}
-}, false)
+	
+	if (keyboard) {
+		this.element.addEventListener('keydown', function(event) {
+			var key = event.keyCode
+			event.preventDefault()
+			if (!handler.keyDownMap[key]) {
+				handler.keyPressedMap[key] = true
+				handler.keyDownMap[key] = true
+				handler.keyPressedQueue.push(key)
+			}
+		}, false)
 
-window.addEventListener('keyup', function(event) {
-	var key = event.keyCode
-	event.preventDefault()
-	PeripheralInput.detail.keyDownMap[key] = false
-	PeripheralInput.detail.keyReleasedMap[key] = true
-	PeripheralInput.detail.keyReleasedQueue.push(key)
-}, false)
+		this.element.addEventListener('keyup', function(event) {
+			var key = event.keyCode
+			event.preventDefault()
+			handler.keyDownMap[key] = false
+			handler.keyReleasedMap[key] = true
+			handler.keyReleasedQueue.push(key)
+		}, false)
+	}
+}
 
-// should come after input is checked
-PeripheralInput.updatePeripheralInput = function() {
-	var keyPressedQueue = PeripheralInput.detail.keyPressedQueue,
-		keyReleasedQueue = PeripheralInput.detail.keyReleasedQueue,
-		keyPressedMap = PeripheralInput.detail.keyPressedMap,
-		keyReleasedMap = PeripheralInput.detail.keyReleasedMap
+PeripheralInput.PeripheralInputHandler.prototype.isKeyDown = function(key) {
+	return this.keyDownMap[key]
+}
+
+PeripheralInput.PeripheralInputHandler.prototype.wasKeyPressed = function(key) {
+	return this.keyPressedMap[key]
+}
+
+PeripheralInput.PeripheralInputHandler.prototype.wasKeyReleased = function(key) {
+	return this.keyReleasedMap[key]
+}
+
+PeripheralInput.PeripheralInputHandler.prototype.isPointerDown = function() {
+	return this.pointerDown
+}
+
+PeripheralInput.PeripheralInputHandler.prototype.wasPointerPressed = function() {
+	return this.pointerPressed
+}
+
+PeripheralInput.PeripheralInputHandler.prototype.wasPointerReleased = function() {
+	return this.pointerReleased
+}
+
+PeripheralInput.PeripheralInputHandler.prototype.getPointerX = function() {
+	return this.pointerX
+}
+
+PeripheralInput.PeripheralInputHandler.prototype.getPointerY = function() {
+	return this.pointerY
+}
+
+// should call after input is checked
+PeripheralInput.PeripheralInputHandler.prototype.update = function() {
+	var keyPressedQueue = this.keyPressedQueue,
+		keyReleasedQueue = this.keyReleasedQueue,
+		keyPressedMap = this.keyPressedMap,
+		keyReleasedMap = this.keyReleasedMap
 	
 	while (keyPressedQueue.length > 0) {
 		keyPressedMap[keyPressedQueue.pop()] = false
@@ -153,4 +205,8 @@ PeripheralInput.updatePeripheralInput = function() {
 	while (keyReleasedQueue.length > 0) {
 		keyReleasedMap[keyReleasedQueue.pop()] = false
 	}
+	
+	this.pointerPressed = false
+	this.pointerReleased = false
 }
+	
