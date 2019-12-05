@@ -124,9 +124,11 @@ PeripheralInput.isKeyReleased = function(key) {
 window.addEventListener('keydown', function(event) {
 	var key = event.keyCode
 	event.preventDefault()
-	PeripheralInput.detail.keyDownMap[key] = true
-	PeripheralInput.detail.keyPressedMap[key] = true
-	PeripheralInput.detail.keyPressedQueue.push(key)
+	if (!PeripheralInput.detail.keyDownMap[key]) {
+		PeripheralInput.detail.keyPressedMap[key] = true
+		PeripheralInput.detail.keyDownMap[key] = true
+		PeripheralInput.detail.keyPressedQueue.push(key)
+	}
 }, false)
 
 window.addEventListener('keyup', function(event) {
