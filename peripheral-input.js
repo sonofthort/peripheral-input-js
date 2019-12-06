@@ -104,7 +104,12 @@ PeripheralInput.keyCodes = {
 
 PeripheralInput.PeripheralInputHandler = function(args) {
 	args = args || {}
-	this.element = args.element || window
+	if (args.keyboardElement !== false) {
+		this.keyboardElement = args.keyboardElement || args.element || window
+	}
+	if (args.pointerElement !== false) {
+		this.pointerElement = args.pointerElement || args.element || window
+	}
 	this.keyDownMap = []
 	this.keyPressedMap = []
 	this.keyReleasedMap = []
@@ -112,25 +117,27 @@ PeripheralInput.PeripheralInputHandler = function(args) {
 	this.keyReleasedQueue = []
 	this.pointerX = 0
 	this.pointerY = 0
+	this.dragX = 0
+	this.dragY = 0
 	this.pointerDown = false
 	this.pointerPressed = false
 	this.pointerReleased = false
 	
-	var handler = this,
-		pointer = args.pointer == null ? true : args.pointer,
-		keyboard = args.keyboard == null ? true : args.keyboard
+	var handler = this
 	
-	if (pointer) {
-		this.element.addEventListener('pointerdown', function(event) {
+	if (this.pointerElement) {
+		this.pointerElement.addEventListener('pointerdown', function(event) {
 			handler.pointerX = event.offsetX
 			handler.pointerX = event.offsetY
 			if (!handler.pointerDown) {
+				handler.dragX = handler.pointerX
+				handler.dragY = handler.pointerX
 				handler.pointerDown = true
 				handler.pointerPressed = true
 			}
 		}, false)
 		
-		this.element.addEventListener('pointerup', function(event) {
+		this.pointerElement.addEventListener('pointerup', function(event) {
 			handler.pointerX = event.offsetX
 			handler.pointerX = event.offsetY
 			handler.pointerDown = false
@@ -138,8 +145,8 @@ PeripheralInput.PeripheralInputHandler = function(args) {
 		}, false)
 	}
 	
-	if (keyboard) {
-		this.element.addEventListener('keydown', function(event) {
+	if (this.keyboardElement) {
+		this.keyboardElement.addEventListener('keydown', function(event) {
 			var key = event.keyCode
 			event.preventDefault()
 			if (!handler.keyDownMap[key]) {
@@ -149,7 +156,7 @@ PeripheralInput.PeripheralInputHandler = function(args) {
 			}
 		}, false)
 
-		this.element.addEventListener('keyup', function(event) {
+		this.keyboardElement.addEventListener('keyup', function(event) {
 			var key = event.keyCode
 			event.preventDefault()
 			handler.keyDownMap[key] = false
@@ -189,6 +196,14 @@ PeripheralInput.PeripheralInputHandler.prototype.getPointerX = function() {
 
 PeripheralInput.PeripheralInputHandler.prototype.getPointerY = function() {
 	return this.pointerY
+}
+
+PeripheralInput.PeripheralInputHandler.prototype.getDragX = function() {
+	return this.dragX
+}
+
+PeripheralInput.PeripheralInputHandler.prototype.getDragY = function() {
+	return this.dragY
 }
 
 // should call after input is checked

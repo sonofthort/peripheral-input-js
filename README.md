@@ -10,9 +10,8 @@ To use PeripheralInput, create a PeripheralInputHandler. Then, call update() on 
 
 ```
 var inputHandler = new PeripheralInput.PeripheralInputHandler({
-    element: window, // the element for which we would like to handle events (default is window)
-    pointer: true, // handle pointer events (default is true)
-    keyboard: true // handle keyboard events (default is true)
+    pointerElement: window, // element for which to handle pointer events (default is window, set to false to disable pointer handling)
+    keyboardElement: window // element for which to handle keyboard events (default is window, set to false to disable keyboard handling)
 })
 
 function myAnimationLoop() {
