@@ -128,10 +128,10 @@ PeripheralInput.PeripheralInputHandler = function(args) {
 	if (this.pointerElement) {
 		this.pointerElement.addEventListener('pointerdown', function(event) {
 			handler.pointerX = event.offsetX
-			handler.pointerX = event.offsetY
+			handler.pointerY = event.offsetY
 			if (!handler.pointerDown) {
 				handler.dragX = handler.pointerX
-				handler.dragY = handler.pointerX
+				handler.dragY = handler.pointerY
 				handler.pointerDown = true
 				handler.pointerPressed = true
 			}
@@ -139,9 +139,14 @@ PeripheralInput.PeripheralInputHandler = function(args) {
 		
 		this.pointerElement.addEventListener('pointerup', function(event) {
 			handler.pointerX = event.offsetX
-			handler.pointerX = event.offsetY
+			handler.pointerY = event.offsetY
 			handler.pointerDown = false
 			handler.pointerReleased = true
+		}, false)
+		
+		this.pointerElement.addEventListener('pointermove', function(event) {
+			handler.pointerX = event.offsetX
+			handler.pointerY = event.offsetY
 		}, false)
 	}
 	
