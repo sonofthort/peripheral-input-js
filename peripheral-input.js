@@ -122,6 +122,9 @@ PeripheralInput.PeripheralInputHandler = function(args) {
 	this.pointerDown = false
 	this.pointerPressed = false
 	this.pointerReleased = false
+	this.dragging = false
+	this.dragStart = false
+	this.dragEnd = false
 	
 	var handler = this
 	
@@ -142,11 +145,30 @@ PeripheralInput.PeripheralInputHandler = function(args) {
 			handler.pointerY = event.offsetY
 			handler.pointerDown = false
 			handler.pointerReleased = true
+			if (handler.dragging) {
+				handler.dragging = false
+				handler.dragEnd = true
+			}
+		}, false)
+		
+		this.pointerElement.addEventListener('pointerout', function(event) {
+			if (handler.pointerDown) {
+				handler.pointerDown = false
+				handler.pointerReleased = true
+			}
+			if (handler.dragging) {
+				handler.dragging = false
+				handler.dragEnd = true
+			}
 		}, false)
 		
 		this.pointerElement.addEventListener('pointermove', function(event) {
 			handler.pointerX = event.offsetX
 			handler.pointerY = event.offsetY
+			if (handler.pointerDown && !handler.dragging) {
+				handler.dragging = true
+				handler.dragStart = true
+			}
 		}, false)
 	}
 	
@@ -203,6 +225,18 @@ PeripheralInput.PeripheralInputHandler.prototype.getPointerY = function() {
 	return this.pointerY
 }
 
+PeripheralInput.PeripheralInputHandler.prototype.didDragStart = function() {
+	return this.dragStart
+}
+
+PeripheralInput.PeripheralInputHandler.prototype.didDragEnd = function() {
+	return this.dragEnd
+}
+
+PeripheralInput.PeripheralInputHandler.prototype.isDragging = function() {
+	return this.dragging
+}
+
 PeripheralInput.PeripheralInputHandler.prototype.getDragX = function() {
 	return this.dragX
 }
@@ -228,5 +262,7 @@ PeripheralInput.PeripheralInputHandler.prototype.update = function() {
 	
 	this.pointerPressed = false
 	this.pointerReleased = false
+	this.dragStart = false
+	this.dragEnd = false
 }
 	
