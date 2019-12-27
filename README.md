@@ -2,9 +2,11 @@
 Some JavaScript mouse/touch and keyboard input helpers.
 
 
-Supplies a polling interface (as well as an event interface to come). Sometimes, its simpler to ask if a key is down, rather than registering and unregistering event callbacks.
+Supplies a polling interface. Sometimes, its simpler to ask if a key is down, rather than registering and unregistering event callbacks.
 
 PeripheralInput also resolves differences between the concept of "is key down?" vs. "was key pressed?". Normally, event callbacks will have to add additional boilerplate code to handle this distinction, and will have to handle the fact that the `keydown` event may be called repeatedly while a key is held down.
+
+PeripheralInput also provides some helpers for pointer dragging.
 
 To use PeripheralInput, create a PeripheralInputHandler. Then, call update() on the handler in your animation loop, after inputs are checked. Example:
 
