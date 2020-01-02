@@ -1,4 +1,5 @@
 PeripheralInput = {}
+PeripheralInput.detail = {}
 
 PeripheralInput.keyCodes = {
 	backspace: 8,
@@ -104,70 +105,75 @@ PeripheralInput.keyCodes = {
 
 PeripheralInput.PeripheralInputHandler = function(args) {
 	args = args || {}
+	
 	if (args.keyboardElement !== false) {
 		this.keyboardElement = args.keyboardElement || args.element || window
 	}
+	
 	if (args.pointerElement !== false) {
 		this.pointerElement = args.pointerElement || args.element || window
 	}
-	this.keyDownMap = []
-	this.keyPressedMap = []
-	this.keyReleasedMap = []
-	this.keyPressedQueue = []
-	this.keyReleasedQueue = []
-	this.pointerX = Infinity
-	this.pointerY = Infinity
-	this.dragX = 0
-	this.dragY = 0
-	this.pointerDown = false
-	this.pointerPressed = false
-	this.pointerReleased = false
-	this.dragging = false
-	this.dragStart = false
-	this.dragEnd = false
+	
+	this._keyDownMap = []
+	this._keyPressedMap = []
+	this._keyReleasedMap = []
+	this._keyPressedQueue = []
+	this._keyReleasedQueue = []
+	this._pointerX = Infinity
+	this._pointerY = Infinity
+	this._dragX = 0
+	this._dragY = 0
+	this._pointerDown = false
+	this._pointerPressed = false
+	this._pointerReleased = false
+	this._dragging = false
+	this._dragStarted = false
+	this._dragEnded = false
+	this._lastPressedKey = null
+	this._lastReleasedKey = null
 	
 	var handler = this
 	
 	if (this.pointerElement) {
 		this.pointerElement.addEventListener('pointerdown', function(event) {
-			handler.pointerX = event.offsetX
-			handler.pointerY = event.offsetY
-			if (!handler.pointerDown) {
-				handler.dragX = handler.pointerX
-				handler.dragY = handler.pointerY
-				handler.pointerDown = true
-				handler.pointerPressed = true
+			handler._pointerX = event.offsetX
+			handler._pointerY = event.offsetY
+			if (!handler._pointerDown) {
+				handler._dragX = handler._pointerX
+				handler._dragY = handler._pointerY
+				handler._pointerDown = true
+				handler._pointerPressed = true
 			}
 		}, false)
 		
 		this.pointerElement.addEventListener('pointerup', function(event) {
-			handler.pointerX = event.offsetX
-			handler.pointerY = event.offsetY
-			handler.pointerDown = false
-			handler.pointerReleased = true
-			if (handler.dragging) {
-				handler.dragging = false
-				handler.dragEnd = true
+			handler._pointerX = event.offsetX
+			handler._pointerY = event.offsetY
+			handler._pointerDown = false
+			handler._pointerReleased = true
+			if (handler._dragging) {
+				handler._dragging = false
+				handler._dragEnded = true
 			}
 		}, false)
 		
 		this.pointerElement.addEventListener('pointerout', function(event) {
-			if (handler.pointerDown) {
-				handler.pointerDown = false
-				handler.pointerReleased = true
+			if (handler._pointerDown) {
+				handler._pointerDown = false
+				handler._pointerReleased = true
 			}
-			if (handler.dragging) {
-				handler.dragging = false
-				handler.dragEnd = true
+			if (handler._dragging) {
+				handler._dragging = false
+				handler._dragEnded = true
 			}
 		}, false)
 		
 		this.pointerElement.addEventListener('pointermove', function(event) {
-			handler.pointerX = event.offsetX
-			handler.pointerY = event.offsetY
-			if (handler.pointerDown && !handler.dragging) {
-				handler.dragging = true
-				handler.dragStart = true
+			handler._pointerX = event.offsetX
+			handler._pointerY = event.offsetY
+			if (handler._pointerDown && !handler._dragging) {
+				handler._dragging = true
+				handler._dragStarted = true
 			}
 		}, false)
 	}
@@ -176,81 +182,68 @@ PeripheralInput.PeripheralInputHandler = function(args) {
 		this.keyboardElement.addEventListener('keydown', function(event) {
 			var key = event.keyCode
 			event.preventDefault()
-			if (!handler.keyDownMap[key]) {
-				handler.keyPressedMap[key] = true
-				handler.keyDownMap[key] = true
-				handler.keyPressedQueue.push(key)
+			if (!handler._keyDownMap[key]) {
+				handler._keyPressedMap[key] = true
+				handler._keyDownMap[key] = true
+				handler._lastPressedKey = key
+				handler._keyPressedQueue.push(key)
 			}
 		}, false)
 
 		this.keyboardElement.addEventListener('keyup', function(event) {
 			var key = event.keyCode
 			event.preventDefault()
-			handler.keyDownMap[key] = false
-			handler.keyReleasedMap[key] = true
-			handler.keyReleasedQueue.push(key)
+			handler._keyDownMap[key] = false
+			handler._keyReleasedMap[key] = true
+			handler._lastReleasedKey = key
+			handler._keyReleasedQueue.push(key)
 		}, false)
 	}
 }
 
+PeripheralInput.detail.accessor = function(publicKey, privateKey) {
+	privateKey = privateKey || ('_' + publicKey)
+	Object.defineProperty(PeripheralInput.PeripheralInputHandler.prototype, publicKey, {
+		get: function() {
+			return this[privateKey]
+		},
+		set: function() {
+			throw 'PeripheralInputHandler: key "' + publicKey + '" cannot be set'
+		}
+	})
+}
+
+PeripheralInput.detail.accessor('pointerDown')
+PeripheralInput.detail.accessor('pointerPressed')
+PeripheralInput.detail.accessor('pointerReleased')
+PeripheralInput.detail.accessor('pointerX')
+PeripheralInput.detail.accessor('pointerY')
+PeripheralInput.detail.accessor('dragStarted')
+PeripheralInput.detail.accessor('dragEnded')
+PeripheralInput.detail.accessor('dragging')
+PeripheralInput.detail.accessor('dragX')
+PeripheralInput.detail.accessor('dragY')
+PeripheralInput.detail.accessor('lastPressedKey')
+PeripheralInput.detail.accessor('lastReleasedKey')
+
 PeripheralInput.PeripheralInputHandler.prototype.isKeyDown = function(key) {
-	return this.keyDownMap[key]
+	return this._keyDownMap[key]
 }
 
 PeripheralInput.PeripheralInputHandler.prototype.wasKeyPressed = function(key) {
-	return this.keyPressedMap[key]
+	return this._keyPressedMap[key]
 }
 
 PeripheralInput.PeripheralInputHandler.prototype.wasKeyReleased = function(key) {
-	return this.keyReleasedMap[key]
-}
-
-PeripheralInput.PeripheralInputHandler.prototype.isPointerDown = function() {
-	return this.pointerDown
-}
-
-PeripheralInput.PeripheralInputHandler.prototype.wasPointerPressed = function() {
-	return this.pointerPressed
-}
-
-PeripheralInput.PeripheralInputHandler.prototype.wasPointerReleased = function() {
-	return this.pointerReleased
-}
-
-PeripheralInput.PeripheralInputHandler.prototype.getPointerX = function() {
-	return this.pointerX
-}
-
-PeripheralInput.PeripheralInputHandler.prototype.getPointerY = function() {
-	return this.pointerY
-}
-
-PeripheralInput.PeripheralInputHandler.prototype.didDragStart = function() {
-	return this.dragStart
-}
-
-PeripheralInput.PeripheralInputHandler.prototype.didDragEnd = function() {
-	return this.dragEnd
-}
-
-PeripheralInput.PeripheralInputHandler.prototype.isDragging = function() {
-	return this.dragging
-}
-
-PeripheralInput.PeripheralInputHandler.prototype.getDragX = function() {
-	return this.dragX
-}
-
-PeripheralInput.PeripheralInputHandler.prototype.getDragY = function() {
-	return this.dragY
+	return this._keyReleasedMap[key]
 }
 
 // should call after input is checked
 PeripheralInput.PeripheralInputHandler.prototype.update = function() {
-	var keyPressedQueue = this.keyPressedQueue,
-		keyReleasedQueue = this.keyReleasedQueue,
-		keyPressedMap = this.keyPressedMap,
-		keyReleasedMap = this.keyReleasedMap
+	var keyPressedQueue = this._keyPressedQueue,
+		keyReleasedQueue = this._keyReleasedQueue,
+		keyPressedMap = this._keyPressedMap,
+		keyReleasedMap = this._keyReleasedMap
 	
 	while (keyPressedQueue.length > 0) {
 		keyPressedMap[keyPressedQueue.pop()] = false
@@ -260,9 +253,11 @@ PeripheralInput.PeripheralInputHandler.prototype.update = function() {
 		keyReleasedMap[keyReleasedQueue.pop()] = false
 	}
 	
-	this.pointerPressed = false
-	this.pointerReleased = false
-	this.dragStart = false
-	this.dragEnd = false
+	this._pointerPressed = false
+	this._pointerReleased = false
+	this._dragStarted = false
+	this._dragEnded = false
+	this._lastPressedKey = null
+	this._lastReleasedKey = null
 }
 	
